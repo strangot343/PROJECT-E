@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Datos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.1.0/src/wordcloud2.min.js"></script>
+    <style>
+        .panel {
+            width: 45%;
+            display: inline-block;
+            vertical-align: top;
+            margin: 10px;
+        }
+        canvas, #wordcloud {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <canvas id="barChart"></canvas>
+        <h3>Top 10 Lenguajes de Programación Utilizados</h3>
+    </div>
+    <div class="panel">
+        <canvas id="columnChart"></canvas>
+        <h3>Top 10 Bases de Datos Utilizadas</h3>
+    </div>
+    <div class="panel">
+        <canvas id="wordcloud"></canvas>
+        <h3>Plataformas Utilizadas (Nube de Palabras)</h3>
+    </div>
+    <div class="panel">
+        <canvas id="bubbleChart"></canvas>
+        <h3>Top 10 Marcos Web Utilizados</h3>
+    </div>
+
+    <script>
+        // Datos para los gráficos
+        const languageData = {
+            labels: ['JavaScript', 'Python', 'Java', 'C#', 'PHP', 'C++', 'Ruby', 'Swift', 'Go', 'Kotlin'],
+            data: [95, 85, 80, 70, 65, 60, 55, 50, 45, 40],
+            colors: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#DAF7A6', '#FFC300', '#C70039', '#900C3F', '#581845', '#4A235A']
+        };
+
+        const databaseData = {
+            labels: ['MySQL', 'PostgreSQL', 'MongoDB', 'SQLite', 'SQL Server', 'Oracle', 'Redis', 'MariaDB', 'Cassandra', 'Elasticsearch'],
+            data: [90, 80, 70, 60, 50, 40, 30, 20, 10, 5],
+            colors: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#DAF7A6', '#FFC300', '#C70039', '#900C3F', '#581845', '#4A235A']
+        };
+
+        const wordcloudData = [
+            { text: 'Node.js', size: 40 },
+            { text: 'React', size: 30 },
+            { text: 'Angular', size: 25 },
+            { text: 'Vue.js', size: 20 },
+            { text: 'Bootstrap', size: 15 },
+            { text: 'Tailwind', size: 10 }
+        ];
+
+        const bubbleData = {
+            labels: ['React', 'Angular', 'Vue.js', 'Svelte', 'Ember.js', 'Backbone.js', 'Knockout.js', 'Aurelia', 'Meteor', 'Polymer'],
+            sizes: [90, 80, 70, 60, 50, 40, 30, 20, 10, 5],
+            colors: ['#FF6384', '#36A2EB', '#FFCE56', '#FF5733', '#DAF7A6', '#FFC300', '#C70039', '#900C3F', '#581845', '#4A235A']
+        };
+
+        // Gráfico de Barras
+        new Chart(document.getElementById('barChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: languageData.labels,
+                datasets: [{
+                    label: 'Lenguaje de Programación',
+                    data: languageData.data,
+                    backgroundColor: languageData.colors
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    datalabels: {
+                        color: '#000',
+                        display: true,
+                        anchor: 'end',
+                        align: 'top'
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Gráfico de Columnas
+        new Chart(document.getElementById('columnChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: databaseData.labels,
+                datasets: [{
+                    label: 'Base de Datos',
+                    data: databaseData.data,
+                    backgroundColor: databaseData.colors,
+                    borderColor: databaseData.colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    datalabels: {
+                        color: '#000',
+                        display: true,
+                        anchor: 'end',
+                        align: 'top'
+                    }
+                },
+                indexAxis: 'x',
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Nube de Palabras
+        WordCloud(document.getElementById('wordcloud'), {
+            list: wordcloudData.map(item => [item.text, item.size]),
+            color: 'random-light'
+        });
+
+        // Gráfico de Burbujas Jerárquico
+        new Chart(document.getElementById('bubbleChart').getContext('2d'), {
+            type: 'bubble',
+            data: {
+                datasets: bubbleData.labels.map((label, index) => ({
+                    label: label,
+                    data: [{ x: index + 1, y: index + 1, r: bubbleData.sizes[index] }],
+                    backgroundColor: bubbleData.colors[index]
+                }))
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    datalabels: {
+                        color: '#000',
+                        display: true,
+                        anchor: 'end',
+                        align: 'top'
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+</body>
+</html>
