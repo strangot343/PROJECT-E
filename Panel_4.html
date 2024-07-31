@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Datos Compacta</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .panel {
+            width: 45%;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+        }
+        canvas, #map {
+            width: 100%;
+            height: 250px; /* Tamaño reducido para gráficos */
+        }
+        #map {
+            height: 300px; /* Tamaño reducido para mapa */
+        }
+        h3 {
+            font-size: 1rem; /* Tamaño de fuente más pequeño */
+            margin: 0 0 10px;
+            padding: 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <canvas id="pieChart"></canvas>
+        <h3>Encuestados Clasificados por Género</h3>
+    </div>
+    <div class="panel">
+        <div id="map"></div>
+        <h3>Encuestados por Países</h3>
+    </div>
+    <div class="panel">
+        <canvas id="lineChart"></canvas>
+        <h3>Encuestados por Edad</h3>
+    </div>
+    <div class="panel">
+        <canvas id="stackedBarChart"></canvas>
+        <h3>Encuestados por Género y Nivel de Educación</h3>
+    </div>
+
+    <script>
+        // Datos para los gráficos
+        const genderData = {
+            labels: ['Masculino', 'Femenino', 'Otro'],
+            data: [55, 40, 5],
+            colors: ['#FF6384', '#36A2EB', '#FFCE56']
+        };
+
+        const countryData = {
+            countries: {
+                'USA': 500,
+                'Canada': 200,
+                'Mexico': 300,
+                'Brazil': 150,
+                'UK': 100
+            }
+        };
+
+        const ageData = {
+            labels: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'],
+            data: [200, 300, 150, 100, 50, 25]
+        };
+
+        const educationGenderData = {
+            labels: ['Masculino', 'Femenino'],
+            data: {
+                'Secundaria': [50, 45],
+                'Preparatoria': [70, 60],
+                'Licenciatura': [80, 70],
+                'Posgrado': [30, 25]
+            }
+        };
+
+        // Gráfico Circular
+        new Chart(document.getElementById('pieChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: genderData.labels,
+                datasets: [{
+                    data: genderData.data,
+                    backgroundColor: genderData.colors
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                let dataset = tooltipItem.dataset;
+                                let currentValue = dataset.data[tooltipItem.dataIndex];
+                                let percentage = ((currentValue / dataset._meta[0].total) * 100).toFixed(2);
+                                return `${tooltipItem.label}: ${percentage}%`;
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Mapa
+        const map = L.map('map').setView([0, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        L.geoJSON({
+            "type": "FeatureCollection",
+            "features": Object.keys(countryData.countries).map(country => ({
+                "type": "Feature",
+                "properties": {
+                    "name": country,
+                    "value": countryData.countries[country]
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [Math.random() * 360 - 180, Math.random() * 180 - 90]
+                }
+            }))
+        }).addTo(map);
+
+        // Gráfico de Líneas
+        new Chart(document.getElementById('lineChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ageData.labels,
+                datasets: [{
+                    label: 'Número de Encuestados',
+                    data: ageData.data,
+                    borderColor: '#FF6384',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    fill: true,
+                    pointRadius: 3
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.label}: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Barras Apiladas
+        new Chart(document.getElementById('stackedBarChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(educationGenderData.data),
+                datasets: [
+                    {
+                        label: 'Masculino',
+                        data: Object.values(educationGenderData.data).map(arr => arr[0]),
+                        backgroundColor: '#FF6384'
+                    },
+                    {
+                        label: 'Femenino',
+                        data: Object.values(educationGenderData.data).map(arr => arr[1]),
+                        backgroundColor: '#36A2EB'
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
